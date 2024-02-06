@@ -1,5 +1,6 @@
 import time
 import RPi.GPIO as GPIO
+import wiringpi as pi
 
 AIN1 = 26
 AIN2 = 21
@@ -9,7 +10,7 @@ BIN1 = 13
 BIN2 = 6
 PWMB = 5
 def motasetup():
-    # GPIOƒsƒ“‚Ìİ’è
+    # GPIOãƒ”ãƒ³ã®è¨­å®š
     pi.wiringPiSetupGpio()
     pi.pinMode( AIN1, pi.OUTPUT )
     pi.pinMode( AIN2, pi.OUTPUT )
@@ -18,17 +19,17 @@ def motasetup():
     pi.pinMode( BIN1, pi.OUTPUT )
     pi.pinMode( BIN2, pi.OUTPUT )
     pi.pinMode( PWMB, pi.OUTPUT )
-    # PWM’[q‚ÉÚ‘±‚µ‚½GPIO‚ğPWMo—Í‚Å‚«‚é‚æ‚¤‚É‚·‚é
+    # PWMç«¯å­ã«æ¥ç¶šã—ãŸGPIOã‚’PWMå‡ºåŠ›ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
     pi.softPwmCreate( PWMA, 0, 100 )
     pi.softPwmCreate( PWMB, 0, 100 )
 
-    #ƒ‚[ƒ^[‚ğ“®‚©‚·‚½‚ß‚ÌŠÖ”
-#^—’l‚Æƒ‚[ƒ^[‚Ìo—Í‚ğŒˆ‚ß‚Ä‚¢‚é
-#ˆø”‚Íƒ‚[ƒ^[‚ğ‰ñ‚·ŠÔ
-#‘Oi
+    #ãƒ¢ãƒ¼ã‚¿ãƒ¼ã‚’å‹•ã‹ã™ãŸã‚ã®é–¢æ•°
+#çœŸç†å€¤ã¨ãƒ¢ãƒ¼ã‚¿ãƒ¼ã®å‡ºåŠ›ã‚’æ±ºã‚ã¦ã„ã‚‹
+#å¼•æ•°ã¯ãƒ¢ãƒ¼ã‚¿ãƒ¼ã‚’å›ã™æ™‚é–“
+#å‰é€²
 def forward(n):
-    # ƒXƒ^ƒ“ƒoƒCó‘Ô‚É‚·‚é
-    #‹t‰ñ“]^—’l
+    # ã‚¹ã‚¿ãƒ³ãƒã‚¤çŠ¶æ…‹ã«ã™ã‚‹
+    #é€†å›è»¢çœŸç†å€¤
     #print("StandBy")
     pi.digitalWrite( STBY, 0 )
     pi.digitalWrite( AIN1, 1 )
@@ -40,14 +41,14 @@ def forward(n):
     #SW on
     pi.digitalWrite( STBY, 1 )
     print("moveforward")
-    #ƒ‚[ƒ^[‚Ìo—Í
+    #ãƒ¢ãƒ¼ã‚¿ãƒ¼ã®å‡ºåŠ›
     pi.softPwmWrite( PWMA, 100 )
     pi.softPwmWrite( PWMB, 100 )
     time.sleep(n)
     with open("log.csv","a",encoding='utf-8')as file:
-            file.write(makecontent()+','+'o—Í'+','+"‘Oi"+str(n)+"•b"+'\n')
+            file.write(makecontent()+','+'å‡ºåŠ›'+','+"å‰é€²"+str(n)+"ç§’"+'\n')
 
-#ƒXƒgƒbƒv
+#ã‚¹ãƒˆãƒƒãƒ—
 def stop():
     print("Stop!!")
     pi.digitalWrite( STBY, 0 )
@@ -57,7 +58,7 @@ def stop():
     pi.softPwmWrite( PWMB, 0 )
 
     def back(n):
-    #‹——£‚©‚ç”ä—á§Œä‚µ‚ÄPWM‚Ì‰¿‚ğ“n‚·
+    #è·é›¢ã‹ã‚‰æ¯”ä¾‹åˆ¶å¾¡ã—ã¦PWMã®ä¾¡ã‚’æ¸¡ã™
     pi.digitalWrite( STBY, 0 )
     pi.digitalWrite( AIN1, 0 )
     pi.digitalWrite( AIN2, 1 )
@@ -72,7 +73,7 @@ def stop():
     pi.softPwmWrite( PWMB, 100)
     time.sleep(n)
     with open("log.csv","a",encoding='utf-8')as file:
-            file.write(makecontent()+','+'o—Í'+','+"Œã‘Ş"+str(n)+"•b"+'\n')
+            file.write(makecontent()+','+'å‡ºåŠ›'+','+"å¾Œé€€"+str(n)+"ç§’"+'\n')
 
     def stack():
     while True:
@@ -80,15 +81,15 @@ def stop():
         if acc[2] < 0:
             print("stack! ","acc:",acc[2])
             with open("log.csv","a",encoding='utf-8')as file:
-                file.write(makecontent()+','+'ƒf[ƒ^'+','+"‰Á‘¬“x_z"+','+str(acc[2])+'\n')
-                file.write(makecontent()+','+'ƒf[ƒ^'+','+"‹@‘Ì‚ª”½“]"+'\n')
+                file.write(makecontent()+','+'ãƒ‡ãƒ¼ã‚¿'+','+"åŠ é€Ÿåº¦_z"+','+str(acc[2])+'\n')
+                file.write(makecontent()+','+'ãƒ‡ãƒ¼ã‚¿'+','+"æ©Ÿä½“ãŒåè»¢"+'\n')
             forward(2)
             stop()
         else:
             break
 
 
-#‰E‰ñ“]
+#å³å›è»¢
 def backspin_R(n):
     pi.digitalWrite( STBY, 0 )
     pi.digitalWrite( AIN1, 1 ) 
@@ -99,16 +100,16 @@ def backspin_R(n):
     pi.softPwmWrite( PWMB, 0 )
     #SW on
     pi.digitalWrite( STBY, 1 )
-    #^—’l•Ï‚¦‚é‚½‚ß‚ÉsetupŠÖ”‚ğŒÄ‚Ô‚Ì‚ğ–Y‚ê‚È‚¢‚æ‚¤‚É
-    #theat‚ª10‹‚®‚ç‚¢‚Ü‚Å‰ñ“]
+    #çœŸç†å€¤å¤‰ãˆã‚‹ãŸã‚ã«setupé–¢æ•°ã‚’å‘¼ã¶ã®ã‚’å¿˜ã‚Œãªã„ã‚ˆã†ã«
+    #theatãŒ10Â°ãã‚‰ã„ã¾ã§å›è»¢
     print("backspin_R")
     pi.softPwmWrite(PWMA,100)
     pi.softPwmWrite(PWMB,100) 
     time.sleep(n)
     with open("log.csv","a",encoding='utf-8')as file:
-            file.write(makecontent()+','+'o—Í'+','+"‰E‰ñ“]"+str(n)+"•b"+'\n')
+            file.write(makecontent()+','+'å‡ºåŠ›'+','+"å³å›è»¢"+str(n)+"ç§’"+'\n')
 
-#¶‰ñ“]  
+#å·¦å›è»¢  
 def backspin_L(n):
     pi.digitalWrite( STBY, 0 )
     pi.digitalWrite( AIN1, 0 ) 
@@ -119,14 +120,14 @@ def backspin_L(n):
     pi.softPwmWrite( PWMB, 0 )
     #SW on
     pi.digitalWrite( STBY, 1 )
-    #^—’l•Ï‚¦‚é‚½‚ß‚ÉsetupŠÖ”‚ğŒÄ‚Ô‚Ì‚ğ–Y‚ê‚È‚¢‚æ‚¤‚É
-    #theat‚ª10‹‚®‚ç‚¢‚Ü‚Å‰ñ“]
+    #çœŸç†å€¤å¤‰ãˆã‚‹ãŸã‚ã«setupé–¢æ•°ã‚’å‘¼ã¶ã®ã‚’å¿˜ã‚Œãªã„ã‚ˆã†ã«
+    #theatãŒ10Â°ãã‚‰ã„ã¾ã§å›è»¢
     print("backspin_L")
     pi.softPwmWrite(PWMA,100)
     pi.softPwmWrite(PWMB,100)
     time.sleep(n)
     with open("log.csv","a",encoding='utf-8')as file:
-            file.write(makecontent()+','+'o—Í'+','+"¶‰ñ“]"+str(n)+"•b"+'\n')
+            file.write(makecontent()+','+'å‡ºåŠ›'+','+"å·¦å›è»¢"+str(n)+"ç§’"+'\n')
 
     def offset_mota():
     pi.digitalWrite( STBY, 0 )
@@ -138,10 +139,10 @@ def backspin_L(n):
     pi.softPwmWrite( PWMB, 0 )
     #SW on
     pi.digitalWrite( STBY, 1 )
-    #^—’l•Ï‚¦‚é‚½‚ß‚ÉsetupŠÖ”‚ğŒÄ‚Ô‚Ì‚ğ–Y‚ê‚È‚¢‚æ‚¤‚É
-    #theat‚ª10‹‚®‚ç‚¢‚Ü‚Å‰ñ“]
+    #çœŸç†å€¤å¤‰ãˆã‚‹ãŸã‚ã«setupé–¢æ•°ã‚’å‘¼ã¶ã®ã‚’å¿˜ã‚Œãªã„ã‚ˆã†ã«
+    #theatãŒ10Â°ãã‚‰ã„ã¾ã§å›è»¢
     print("backspin_R")
     pi.softPwmWrite(PWMA,100)
     pi.softPwmWrite(PWMB,100) 
     with open("log.csv","a",encoding='utf-8')as file:
-            file.write(makecontent()+','+'o—Í'+','+"‰E‰ñ“]10•b"+'\n')
+            file.write(makecontent()+','+'å‡ºåŠ›'+','+"å³å›è»¢10ç§’"+'\n')
