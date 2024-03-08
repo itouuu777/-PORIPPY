@@ -11,7 +11,7 @@ import wiringpi as pi
 from picamera2 import Picamera2
 from libcamera import controls
 import cv2
-import scipy.interpolate as scipl
+from scipy.optimize import curve_fit
 import csv
 
 
@@ -133,22 +133,40 @@ def forward(n):
    
     
     pi.digitalWrite( STBY, 0 )
-    pi.digitalWrite( AIN1, 1 )
-    pi.digitalWrite( AIN2, 0 )
+    pi.digitalWrite( AIN1, 0 )
+    pi.digitalWrite( AIN2, 1 )
     pi.softPwmWrite( PWMA, 0 )
-    pi.digitalWrite( BIN1, 0 )
-    pi.digitalWrite( BIN2, 1 )
+    pi.digitalWrite( BIN1, 1 )
+    pi.digitalWrite( BIN2, 0 )
     pi.softPwmWrite( PWMB, 0 )
     
     pi.digitalWrite( STBY, 1 )
     print("moveforward")
     
-    pi.softPwmWrite( PWMA, 100 )
-    pi.softPwmWrite( PWMB, 100 )
+    pi.softPwmWrite( PWMA, 150 )
+    pi.softPwmWrite( PWMB, 150 )
     time.sleep(n)
     with open("log.csv","a",encoding='utf-8')as file:
             file.write(makecontent()+','+'output'+','+"forward"+str(n)+"second"+'\n')
 
+
+def forward_S(n):
+    pi.digitalWrite( STBY, 0 )
+    pi.digitalWrite( AIN1, 0 )
+    pi.digitalWrite( AIN2, 1 )
+    pi.softPwmWrite( PWMA, 0 )
+    pi.digitalWrite( BIN1, 1 )
+    pi.digitalWrite( BIN2, 0 )
+    pi.softPwmWrite( PWMB, 0 )
+    
+    pi.digitalWrite( STBY, 1 )
+    print("moveforward")
+    
+    pi.softPwmWrite( PWMA, speed )
+    pi.softPwmWrite( PWMB, speed )
+    time.sleep(n)
+    with open("log.csv","a",encoding='utf-8')as file:
+            file.write(makecontent()+','+'output'+','+"forward_S"+str(n)+"second"+'\n')
 
 def stop():
     print("Stop!!")
@@ -161,11 +179,11 @@ def stop():
 def back(n):
     
     pi.digitalWrite( STBY, 0 )
-    pi.digitalWrite( AIN1, 0 )
-    pi.digitalWrite( AIN2, 1 )
+    pi.digitalWrite( AIN1, 1 )
+    pi.digitalWrite( AIN2, 0 )
     pi.softPwmWrite( PWMA, 0 )
-    pi.digitalWrite( BIN1, 1 )
-    pi.digitalWrite( BIN2, 0 )
+    pi.digitalWrite( BIN1, 0 )
+    pi.digitalWrite( BIN2, 1 )
     pi.softPwmWrite( PWMB, 0 )
         
     pi.digitalWrite( STBY, 1 )
@@ -193,25 +211,6 @@ def stack():
 
 def backspin_R(n):
     pi.digitalWrite( STBY, 0 )
-    pi.digitalWrite( AIN1, 1 ) 
-    pi.digitalWrite( AIN2, 0 )
-    pi.softPwmWrite( PWMA, 0 )
-    pi.digitalWrite( BIN1, 1 )
-    pi.digitalWrite( BIN2, 0 )
-    pi.softPwmWrite( PWMB, 0 )
-    
-    pi.digitalWrite( STBY, 1 )
-    
-    print("backspin_R")
-    pi.softPwmWrite(PWMA,100)
-    pi.softPwmWrite(PWMB,100) 
-    time.sleep(n)
-    with open("log.csv","a",encoding='utf-8')as file:
-        file.write(makecontent()+','+'output'+','+"backspin_R"+str(n)+"second"+'\n')
-
- 
-def backspin_L(n):
-    pi.digitalWrite( STBY, 0 )
     pi.digitalWrite( AIN1, 0 ) 
     pi.digitalWrite( AIN2, 1 )
     pi.softPwmWrite( PWMA, 0 )
@@ -221,9 +220,28 @@ def backspin_L(n):
     
     pi.digitalWrite( STBY, 1 )
     
+    print("backspin_R")
+    pi.softPwmWrite(PWMA,150)
+    pi.softPwmWrite(PWMB,150) 
+    time.sleep(n)
+    with open("log.csv","a",encoding='utf-8')as file:
+        file.write(makecontent()+','+'output'+','+"backspin_R"+str(n)+"second"+'\n')
+
+ 
+def backspin_L(n):
+    pi.digitalWrite( STBY, 0 )
+    pi.digitalWrite( AIN1, 1 ) 
+    pi.digitalWrite( AIN2, 0 )
+    pi.softPwmWrite( PWMA, 0 )
+    pi.digitalWrite( BIN1, 1 )
+    pi.digitalWrite( BIN2, 0 )
+    pi.softPwmWrite( PWMB, 0 )
+    
+    pi.digitalWrite( STBY, 1 )
+    
     print("backspin_L")
-    pi.softPwmWrite(PWMA,100)
-    pi.softPwmWrite(PWMB,100)
+    pi.softPwmWrite(PWMA,150)
+    pi.softPwmWrite(PWMB,150)
     time.sleep(n)
     with open("log.csv","a",encoding='utf-8')as file:
             file.write(makecontent()+','+'output'+','+"backspin_L"+str(n)+"second"+'\n')
@@ -294,7 +312,7 @@ def chakuchi_hantei_bmx():
 
         elapsed_time = time.time() - start_time
         if elapsed_time >= 20.0:
-            print("Timed out. Setting chakuchi_b to 1.")
+            print("Timed out. Setting chakuchi to 1.")
             chakuchi = 1
             break
     return(chakuchi)
@@ -416,10 +434,7 @@ def get_azimuth_distance():
         if azimuth < 0:
             azimuth += 360
         return azimuth, distance  
-if __name__ == "__main__":
-    azimuth, distance = get_azimuth_distance()
-    print(f"azimuth: {azimuth} degrees")
-    print(f"Distance: {distance} meters")
+
 
 def getoffset():
     n11=0
@@ -533,7 +548,9 @@ def rotate_to_target_direction(theta,muki):
                 
 
 def GPS_yuudou():
-    forward(5)
+    for speed in range(50, 100):
+        forward(0.1,speed)
+    forward_S(5, 100)
     stop()
     stack()
     with open("log.csv","a",encoding='utf-8')as file:
@@ -566,7 +583,9 @@ def GPS_yuudou():
         else:
             backspin_L(1)
             stop()
-            forward(5)
+            for speed in range(50,100):
+                forward_S(0.1,speed)
+            forward_S(5,100)
             stop()
             acc = acc_value()
             mag = mag_value()
@@ -580,7 +599,9 @@ def GPS_yuudou():
         if(distance >= 2):
             if(theta <= 30):
                 print('forward')
-                forward(5)
+                for speed in range(50, 100):
+                   forward(0.1,speed)
+                forward_S(5, 100)
                 stop()
                 stack()
 
@@ -716,7 +737,7 @@ def cam_chosei():
 
         return chuo
 
-def cam():
+def cam_zahyo():
     with Picamera2() as camera:
         try:
             camera.resolution = (640, 480)
@@ -760,6 +781,10 @@ def cam():
 
         return zahyou
 
+def tenth_order_func(x, a, b, c, d, e, f, g, h, i, j, k):
+    return a * x**10 + b * x**9 + c * x**8 + d * x**7 + e * x**6 + f * x**5 + g * x**4 + h * x**3 + i * x**2 + j * x + k
+
+
 def dis(nearest_point):
     filename = 'distance_data.csv'
     camera_data = []
@@ -771,19 +796,66 @@ def dis(nearest_point):
             if row:
                 camera_data.append(float(row[0]))
                 real_data.append(float(row[1]))
+    popt, pcov = curve_fit(tenth_order_func, camera_data, real_data)
 
-    f_sci=scipl.CubicSpline(camera_data,real_data)
-    camera_dis = (nearest_point[0]**2+nearest_point[1]**2)**(1/2)
-    real_dis = f_sci(camera_dis)
-    taiya_dis = 0.5  #taiya_kyori[m/s]
-    t_time = real_dis/taiya_dis
-    forward(t_time)
-    stop()
+    x_value = nearest_point
+    y_value = tenth_order_func(x_value, *popt)
+    print(y_value)
+    
+    
     diss=1
     return diss
 
     
+def last():
+    with Picamera2() as camera:
+        try:
+            camera.resolution = (64, 48)
+            camera.start()
 
+            while True:
+                im = camera.capture_array()
+                cv2.imshow("camera", im)
+                key = cv2.waitKey(1) & 0xFF
+                if key == 27:
+                    break
+
+        finally:
+            cv2.destroyAllWindows()
+
+            img = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+            lower_red = np.array([0, 110, 70])
+            upper_red = np.array([3, 255, 255])
+            frame_mask = cv2.inRange(hsv, lower_red, upper_red)
+            
+            complete = 0
+
+            dst = cv2.bitwise_and(img, img, mask=frame_mask)
+            cv2.imwrite('otameshi.jpg', dst)
+
+            img = cv2.imread('otameshi.jpg', 0)
+            if img is None:
+                print("fall")
+                return None 
+
+            ret, img_th = cv2.threshold(img, 0, 255, cv2.THRESH_OTSU)
+
+            hole_area = img_th.size
+            red_area = cv2.countNonZero(img_th)
+            red_percentage =red_area / hole_area * 100
+
+            print('aka sennyu: ' + str(red_percentage) + '%')
+
+            with open("log.csv", "a", encoding='utf-8') as file:
+                file.write(makecontent() + ',' + 'data' + ',' + 'para' + str(red_percentage) + '\n')
+
+            if red_percentage > 30:
+                 complete = 1
+                 
+
+    return complete
 
 
 
@@ -862,7 +934,7 @@ if __name__=="__main__":
     else:
         print("chu_error")
 
-    zah=cam()
+    zah=cam_zahyo()
     if zah==1:
         print("zahyou shutoku")
         with open("log.csv","a",encoding='utf-8')as file:
@@ -878,4 +950,12 @@ if __name__=="__main__":
     else:
         print("I'll be back")
 
+    
+    finish = last()
+    if finish == 1:
+        print("Goal!")
+        with open("log.csv","a",encoding='utf-8')as file:
+            file.write(makecontent()+','+'sequence'+','+"object is centor!"+'\n')
+    else:
+        print("oshii!")
     
